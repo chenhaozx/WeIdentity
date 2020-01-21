@@ -21,6 +21,9 @@ package com.webank.weid.rpc;
 
 import java.util.List;
 
+import com.webank.wedpr.assethiding.OwnerResult;
+import com.webank.wedpr.assethiding.proto.CreditCredential;
+
 import com.webank.weid.protocol.base.Challenge;
 import com.webank.weid.protocol.base.ClaimPolicy;
 import com.webank.weid.protocol.base.CredentialPojo;
@@ -95,6 +98,59 @@ public interface CredentialPojoService {
     ResponseData<String> getCredentialPojoHash(CredentialPojo credentialPojo);
 
     /**
+     * user generate random secret key by user's private key.
+     *
+     * @param randomStr a random string to generate secret key
+     * @param weIdAuthentication user's authentication info
+     * @return ownerResult generated from user's secret
+     */
+    ResponseData<OwnerResult> prepareCredit(
+        String randomStr
+        WeIdAuthentication weIdAuthentication
+    );
+
+    /**
+     * user transfer consumable credentialPojo to verifier.
+     *
+     * @param credential consumable credentialPojo
+     * @param transferArgument receiver's info of transferring
+     * @param weIdAuthentication user's authentication info
+     * @return user's owner result
+     */
+    ResponseData<OwnerResult> transferCreditCredential(
+        CredentialPojo credential,
+        String transferArgument,
+        WeIdAuthentication weIdAuthentication
+    );
+
+    /**
+     * Generate a Consumable credential based on a credential(ethier original or zkp).
+     *
+     * @param credential the credential(ethier original or zkp)
+     * @param ownerResult transfered from user
+     * @param auth user's authentication info.
+     * @return a consumable credential.
+     */
+    ResponseData<CredentialPojo> createConsumableCredential(
+        CredentialPojo credential,
+        OwnerResult ownerResult,
+        WeIdAuthentication auth
+    );
+
+    /**
+     * Verify the validity of a consumable credential. Public key will be fetched from chain.
+     *
+     * @param issuerWeId the issuer WeId
+     * @param credential the credential
+     * @param creditCredential the consumable credential
+     * @return the verification result. True if yes, false otherwise with exact verify error codes
+     */
+    ResponseData<Boolean> verify(
+        String issuerWeId,
+        CredentialPojo credential,
+        CreditCredential creditCredential);
+
+    /**
      * Verify the validity of a credential. Public key will be fetched from chain.
      *
      * @param issuerWeId the issuer WeId
@@ -127,7 +183,6 @@ public interface CredentialPojoService {
         Challenge challenge,
         PresentationE presentationE
     );
-
 
     /**
      * packing according to original vouchers and disclosure strategies.

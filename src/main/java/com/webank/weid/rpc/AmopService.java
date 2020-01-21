@@ -21,12 +21,18 @@ package com.webank.weid.rpc;
 
 import com.webank.weid.protocol.amop.GetEncryptKeyArgs;
 import com.webank.weid.protocol.amop.GetPolicyAndPreCredentialArgs;
+import com.webank.weid.protocol.amop.GetPolicyAndTransferArgs;
 import com.webank.weid.protocol.amop.RequestIssueCredentialArgs;
+import com.webank.weid.protocol.amop.RequestIssueCreditArgs;
+import com.webank.weid.protocol.amop.RequestTransferCreditCredentialArgs;
 import com.webank.weid.protocol.base.PolicyAndChallenge;
 import com.webank.weid.protocol.response.AmopResponse;
 import com.webank.weid.protocol.response.GetEncryptKeyResponse;
+import com.webank.weid.protocol.response.GetPolicyAndTransferArgsResponse;
 import com.webank.weid.protocol.response.PolicyAndPreCredentialResponse;
 import com.webank.weid.protocol.response.RequestIssueCredentialResponse;
+import com.webank.weid.protocol.response.RequestIssueCreditResponse;
+import com.webank.weid.protocol.response.RequestTransferCreditCredentialResponse;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.rpc.callback.AmopCallback;
 import com.webank.weid.service.impl.base.AmopCommonArgs;
@@ -61,4 +67,37 @@ public interface AmopService {
         RequestIssueCredentialArgs args
     );
 
+    /**
+     * request policyAndChallenge and transfer argument.
+     * @param orgId the id of the target organization
+     * @param args including policy id, user's weID and transactionInfo
+     * @return policyAndChallenge and transferArgument
+     */
+    ResponseData<GetPolicyAndTransferArgsResponse> getPolicyAndTransferArgs(
+        String orgId,
+        GetPolicyAndTransferArgs args
+    );
+    
+    /**
+     * request issuer to issue consumable credential.
+     * @param toOrgId the id of the target organization
+     * @param args including presentation and ownerResult.
+     * @return redeemerResult
+     */
+    ResponseData<RequestIssueCreditResponse> requestIssueCredit(
+        String toOrgId,
+        RequestIssueCreditArgs args
+    );
+
+    /**
+     * (待讨论接口，暂时不用)
+     * transfer user's presentation and consumable credential.
+     * @param toOrgId orgId the id of the target organization
+     * @param args including user's presentation and consumable credential
+     * @return verify result
+     */
+    ResponseData<RequestTransferCreditCredentialResponse> requestTransferCreditCredential(
+        String toOrgId,
+        RequestTransferCreditCredentialArgs args
+    );
 }
