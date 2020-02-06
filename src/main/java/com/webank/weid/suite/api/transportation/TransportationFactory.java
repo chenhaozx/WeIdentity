@@ -19,6 +19,7 @@
 
 package com.webank.weid.suite.api.transportation;
 
+import com.webank.weid.constant.TransportationType;
 import com.webank.weid.suite.api.transportation.inf.JsonTransportation;
 import com.webank.weid.suite.api.transportation.inf.PdfTransportation;
 import com.webank.weid.suite.api.transportation.inf.QrCodeTransportation;
@@ -41,5 +42,15 @@ public class TransportationFactory {
 
     public static PdfTransportation newPdfTransportation() {
         return new PdfTransportationImpl();
+    }
+
+    /**
+     * 根据传入的类型获取传输层的载体.
+     * @param type
+     * @return 传输层的载体对象，比如AMOP
+     */
+    public static Transportation getTransportation(TransportationType type) {
+
+        return null;
     }
 }
