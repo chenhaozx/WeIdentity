@@ -25,12 +25,18 @@ import com.webank.weid.protocol.amop.GetEncryptKeyArgs;
 import com.webank.weid.protocol.amop.GetPolicyAndChallengeArgs;
 import com.webank.weid.protocol.amop.GetPolicyAndPreCredentialArgs;
 import com.webank.weid.protocol.amop.IssueCredentialArgs;
+import com.webank.weid.protocol.amop.RequestConsumableCredentialArgs;
+import com.webank.weid.protocol.amop.RequestVerifierOwnerResultArgs;
+import com.webank.weid.protocol.amop.TransferCreditCredentialArgs;
 import com.webank.weid.protocol.response.AmopNotifyMsgResult;
 import com.webank.weid.protocol.response.AmopResponse;
 import com.webank.weid.protocol.response.GetEncryptKeyResponse;
 import com.webank.weid.protocol.response.GetPolicyAndChallengeResponse;
 import com.webank.weid.protocol.response.PolicyAndPreCredentialResponse;
+import com.webank.weid.protocol.response.RequestConsumableCredentialResponse;
 import com.webank.weid.protocol.response.RequestIssueCredentialResponse;
+import com.webank.weid.protocol.response.RequestVerifierOwnerResultResponse;
+import com.webank.weid.protocol.response.TransferCreditCredentialResponse;
 import com.webank.weid.service.impl.base.AmopCommonArgs;
 
 /**
@@ -120,6 +126,33 @@ public class AmopCallback implements PushNotifyAllCallback {
         result.setErrorCode(ErrorCode.AMOP_MSG_CALLBACK_SERVER_SIDE_NO_HANDLE.getCode());
         result.setErrorMessage(ErrorCode.AMOP_MSG_CALLBACK_SERVER_SIDE_NO_HANDLE.getCodeDesc());
         return result;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.callback.PushNotifyAllCallback#onPush(com.webank.weid.protocol.amop.RequestConsumableCredentialArgs)
+     */
+    @Override
+    public RequestConsumableCredentialResponse onPush(RequestConsumableCredentialArgs args) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.callback.PushNotifyAllCallback#onPush(com.webank.weid.protocol.amop.RequestVerifierOwnerResultArgs)
+     */
+    @Override
+    public RequestVerifierOwnerResultResponse onPush(RequestVerifierOwnerResultArgs args) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.callback.PushNotifyAllCallback#onPush(com.webank.weid.protocol.amop.TransferCreditCredentialArgs)
+     */
+    @Override
+    public TransferCreditCredentialResponse onPush(TransferCreditCredentialArgs args) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

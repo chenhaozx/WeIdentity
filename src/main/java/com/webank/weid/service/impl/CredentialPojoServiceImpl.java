@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.webank.wedpr.assethiding.OwnerResult;
 import com.webank.wedpr.common.Utils;
 import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
 import com.webank.wedpr.selectivedisclosure.PredicateType;
@@ -65,7 +66,11 @@ import com.webank.weid.protocol.base.WeIdAuthentication;
 import com.webank.weid.protocol.base.WeIdDocument;
 import com.webank.weid.protocol.base.WeIdPublicKey;
 import com.webank.weid.protocol.cpt.Cpt111;
+import com.webank.weid.protocol.request.CreateConsumableCredentialPojoArgs;
 import com.webank.weid.protocol.request.CreateCredentialPojoArgs;
+import com.webank.weid.protocol.request.CreateZkpCredentialPojoArgs;
+import com.webank.weid.protocol.request.GetConsumableCredentialArgs;
+import com.webank.weid.protocol.request.TransferConsumableCredentialArgs;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.rpc.CptService;
 import com.webank.weid.rpc.CredentialPojoService;
@@ -1890,6 +1895,65 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
                 }
             }
         }
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#createConsumableCredential(com.webank.weid.protocol.request.CreateConsumableCredentialPojoArgs)
+     */
+    @Override
+    public ResponseData<CredentialPojo> createConsumableCredential(
+        CreateConsumableCredentialPojoArgs args) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#createZkpCredential(com.webank.weid.protocol.request.CreateZkpCredentialPojoArgs)
+     */
+    @Override
+    public ResponseData<CredentialPojo> createZkpCredential(CreateZkpCredentialPojoArgs args) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#prepareCredit(java.lang.String, com.webank.weid.protocol.base.WeIdAuthentication)
+     */
+    @Override
+    public ResponseData<OwnerResult> prepareCredit(String randomStr,
+        WeIdAuthentication weIdAuthentication) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#getConsumableCredential(com.webank.weid.protocol.request.GetConsumableCredentialArgs, com.webank.weid.protocol.base.WeIdAuthentication)
+     */
+    @Override
+    public ResponseData<CredentialPojo> getConsumableCredential(GetConsumableCredentialArgs args,
+        WeIdAuthentication weIdAuthentication) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#transferConsumableCredential(com.webank.weid.protocol.request.TransferConsumableCredentialArgs, com.webank.weid.protocol.base.WeIdAuthentication)
+     */
+    @Override
+    public ResponseData<Integer> transferConsumableCredential(TransferConsumableCredentialArgs args,
+        WeIdAuthentication weIdAuthentication) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#consume(java.lang.String, com.webank.weid.protocol.base.CredentialPojo, com.webank.weid.protocol.base.WeIdAuthentication)
+     */
+    @Override
+    public ResponseData<Boolean> consume(String issuerWeId, CredentialPojo consumableCredential,
+        WeIdAuthentication weIdAuthentication) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 

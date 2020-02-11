@@ -1,7 +1,8 @@
-package com.webank.weid.suite.api.transportation;
+package com.webank.weid.suite.api;
 
 import com.webank.weid.protocol.amop.RequestConsumableCredentialArgs;
 import com.webank.weid.protocol.amop.RequestVerifierOwnerResultArgs;
+import com.webank.weid.protocol.amop.RequestZkpConsumableCredentialArgs;
 import com.webank.weid.protocol.amop.TransferCreditCredentialArgs;
 import com.webank.weid.protocol.base.PolicyAndChallenge;
 import com.webank.weid.protocol.response.RequestConsumableCredentialResponse;
@@ -14,7 +15,7 @@ import com.webank.weid.protocol.response.TransferCreditCredentialResponse;
  *
  * @author tonychen 2020年2月6日
  */
-public interface Transportation {
+public interface TransportService {
 
     /**
      * 获取policyAndChallenge
@@ -32,9 +33,21 @@ public interface Transportation {
      * @param args including presentation and ownerResult.
      * @return redeemerResult
      */
-    ResponseData<RequestConsumableCredentialResponse> requestConsumableCredential(
+    ResponseData<RequestConsumableCredentialResponse> requestOriginalConsumableCredential(
         String toOrgId,
         RequestConsumableCredentialArgs args
+    );
+
+    /**
+     * request issuer to issue consumable credential.
+     *
+     * @param toOrgId the id of the target organization
+     * @param args including presentation and ownerResult.
+     * @return redeemerResult
+     */
+    ResponseData<RequestConsumableCredentialResponse> requestZkpConsumableCredential(
+        String toOrgId,
+        RequestZkpConsumableCredentialArgs args
     );
 
     /**

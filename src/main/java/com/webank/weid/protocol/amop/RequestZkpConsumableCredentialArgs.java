@@ -6,10 +6,10 @@ import lombok.Data;
 import com.webank.weid.protocol.base.PresentationE;
 
 /**
- * @author tonychen 2020年2月6日
+ * @author tonychen 2020年2月11日
  */
 @Data
-public class RequestConsumableCredentialArgs {
+public class RequestZkpConsumableCredentialArgs {
 
     /**
      * user's credential list.
@@ -30,4 +30,6 @@ public class RequestConsumableCredentialArgs {
      * original or zkp.
      */
     //private String credentialType;
+
+    private String claim;
 }
