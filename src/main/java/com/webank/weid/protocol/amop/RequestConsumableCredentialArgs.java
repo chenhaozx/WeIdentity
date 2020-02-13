@@ -1,5 +1,7 @@
 package com.webank.weid.protocol.amop;
 
+import java.util.Map;
+
 import com.webank.wedpr.assethiding.OwnerResult;
 import lombok.Data;
 
@@ -29,5 +31,10 @@ public class RequestConsumableCredentialArgs {
     /**
      * original or zkp.
      */
-    //private String credentialType;
+    private String credentialType;
+    
+    /**
+     * extra data which policy presenter can use it store some specific business data.
+     */
+    private Map<String, String> extra;
 }

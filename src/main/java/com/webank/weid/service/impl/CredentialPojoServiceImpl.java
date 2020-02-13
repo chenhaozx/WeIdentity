@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.webank.wedpr.assethiding.OwnerClient;
 import com.webank.wedpr.assethiding.OwnerResult;
 import com.webank.wedpr.common.Utils;
 import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
@@ -50,9 +51,11 @@ import org.slf4j.LoggerFactory;
 import com.webank.weid.constant.CredentialConstant;
 import com.webank.weid.constant.CredentialConstant.CredentialProofType;
 import com.webank.weid.constant.CredentialFieldDisclosureValue;
+import com.webank.weid.constant.CredentialType;
 import com.webank.weid.constant.DataDriverConstant;
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.constant.ParamKeyConstant;
+import com.webank.weid.constant.TransportationType;
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.exception.DataTypeCastException;
 import com.webank.weid.exception.WeIdBaseException;
@@ -60,6 +63,7 @@ import com.webank.weid.protocol.base.Challenge;
 import com.webank.weid.protocol.base.ClaimPolicy;
 import com.webank.weid.protocol.base.Cpt;
 import com.webank.weid.protocol.base.CredentialPojo;
+import com.webank.weid.protocol.base.PolicyAndChallenge;
 import com.webank.weid.protocol.base.PresentationE;
 import com.webank.weid.protocol.base.PresentationPolicyE;
 import com.webank.weid.protocol.base.WeIdAuthentication;
@@ -71,6 +75,7 @@ import com.webank.weid.protocol.request.CreateCredentialPojoArgs;
 import com.webank.weid.protocol.request.CreateZkpCredentialPojoArgs;
 import com.webank.weid.protocol.request.GetConsumableCredentialArgs;
 import com.webank.weid.protocol.request.TransferConsumableCredentialArgs;
+import com.webank.weid.protocol.response.RequestConsumableCredentialResponse;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.rpc.CptService;
 import com.webank.weid.rpc.CredentialPojoService;
@@ -78,6 +83,8 @@ import com.webank.weid.rpc.WeIdService;
 import com.webank.weid.service.BaseService;
 import com.webank.weid.suite.api.persistence.Persistence;
 import com.webank.weid.suite.persistence.sql.driver.MysqlDriver;
+import com.webank.weid.suite.transportService.TransportServiceFactory;
+import com.webank.weid.suite.transportService.request.intf.Transport;
 import com.webank.weid.util.CredentialPojoUtils;
 import com.webank.weid.util.CredentialUtils;
 import com.webank.weid.util.DataToolUtils;
@@ -880,7 +887,9 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
                 result.setExpirationDate(newExpirationDate);
             }
             result.addType(CredentialConstant.DEFAULT_CREDENTIAL_TYPE);
-            result.addType(CredentialConstant.ORIGINAL_CREDENTIAL_TYPE);
+            CredentialType credentialType = args.getType();
+            result.addType(credentialType.getName());
+            //result.addType(CredentialConstant.ORIGINAL_CREDENTIAL_TYPE);
             Object claimObject = args.getClaim();
             String claimStr = null;
             if (!(claimObject instanceof String)) {
@@ -922,6 +931,49 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         }
     }
 
+    
+    /* (non-Javadoc)
+     * @see com.webank.weid.rpc.CredentialPojoService#createConsumableCredential(com.webank.weid.protocol.request.CreateConsumableCredentialPojoArgs)
+     */
+    @Override
+    public ResponseData<CredentialPojo> createConsumableCredential(
+        CreateConsumableCredentialPojoArgs args) {
+    	
+    	if(args == null || StringUtils.isBlank(args.getCreditCredential())) {
+    		logger.error("[createConsumableCredential] Input parameters are illegal! ");
+    		return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
+    	}
+    	
+    	CreateCredentialPojoArgs createArgs = new CreateCredentialPojoArgs();
+    	prepareCredentialArgs(args, createArgs);
+    	ResponseData<CredentialPojo> result = this.createCredential(createArgs);
+    	Integer errorCode = result.getErrorCode();
+    	if(errorCode.intValue() != ErrorCode.SUCCESS.getCode()) {
+    		logger.error("[createConsumableCredential] Create consumable credential failed. ");
+    		return result;
+    	}
+    	
+    	CredentialPojo credential = result.getResult();
+    	credential.putProofValue("creditCredential", args.getCreditCredential());
+    	credential.addType(CredentialType.CONSUMABLE.getName());
+        return result;
+    }
+    
+    private static void prepareCredentialArgs(
+    	CreateConsumableCredentialPojoArgs args, 
+    	CreateCredentialPojoArgs createArgs
+    ) {
+    	
+    	createArgs.setClaim(args.getClaim());
+    	createArgs.setCptId(args.getCptId());
+    	createArgs.setExpirationDate(args.getExpirationDate());
+    	createArgs.setId(args.getId());
+    	createArgs.setIssuanceDate(args.getIssuanceDate());
+    	createArgs.setIssuer(args.getIssuer());
+    	createArgs.setType(args.getCredentialType());
+    	createArgs.setWeIdAuthentication(args.getWeIdAuthentication());
+    }
+    
     /**
      * Add an extra signer and signature to a Credential. Multiple signatures will be appended in an
      * embedded manner.
@@ -1897,32 +1949,25 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.webank.weid.rpc.CredentialPojoService#createConsumableCredential(com.webank.weid.protocol.request.CreateConsumableCredentialPojoArgs)
-     */
-    @Override
-    public ResponseData<CredentialPojo> createConsumableCredential(
-        CreateConsumableCredentialPojoArgs args) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     /* (non-Javadoc)
      * @see com.webank.weid.rpc.CredentialPojoService#createZkpCredential(com.webank.weid.protocol.request.CreateZkpCredentialPojoArgs)
      */
     @Override
     public ResponseData<CredentialPojo> createZkpCredential(CreateZkpCredentialPojoArgs args) {
-        // TODO Auto-generated method stub
-        return null;
+       
+    	return null;
     }
 
     /* (non-Javadoc)
      * @see com.webank.weid.rpc.CredentialPojoService#prepareCredit(java.lang.String, com.webank.weid.protocol.base.WeIdAuthentication)
      */
     @Override
-    public ResponseData<OwnerResult> prepareCredit(String randomStr,
+    public ResponseData<String> prepareCredit(
+        String randomStr,
         WeIdAuthentication weIdAuthentication) {
-        // TODO Auto-generated method stub
+    	
+    	//PkeyByRandomService pkeyByRandomService = new PkeyByRandomService();
         return null;
     }
 
@@ -1930,19 +1975,65 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
      * @see com.webank.weid.rpc.CredentialPojoService#getConsumableCredential(com.webank.weid.protocol.request.GetConsumableCredentialArgs, com.webank.weid.protocol.base.WeIdAuthentication)
      */
     @Override
-    public ResponseData<CredentialPojo> getConsumableCredential(GetConsumableCredentialArgs args,
+    public ResponseData<CredentialPojo> getConsumableCredential(
+    	GetConsumableCredentialArgs args,
         WeIdAuthentication weIdAuthentication) {
-        // TODO Auto-generated method stub
-        return null;
+    	
+    	//check args
+    	ErrorCode checkArgsResult = checkGetConsumableCredentialArgs(args, weIdAuthentication);
+    	if(checkArgsResult.getCode() != ErrorCode.SUCCESS.getCode()) {
+    		logger.error("[getConsumableCredential] Input parameters error!");
+    		return new ResponseData<>(null, checkArgsResult);
+    	}
+    	//prepare presentation
+    	PolicyAndChallenge policyAndChallenge = args.getPolicyAndChallenge();
+    	ResponseData<PresentationE> presentationResult = createPresentation(
+    		args.getCredentialPojoList(), 
+    		policyAndChallenge.getPresentationPolicyE(), 
+    	    policyAndChallenge.getChallenge(), 
+    		weIdAuthentication);
+    	
+    	String credentialId = policyAndChallenge.getPresentationPolicyE().getExtra().get("credentialId");
+    	String seqId = policyAndChallenge.getPresentationPolicyE().getExtra().get("seqId");
+    	ResponseData<String>secretKeyResp = prepareCredit(credentialId, weIdAuthentication);
+    	String secretKey = secretKeyResp.getResult();
+    	
+    	OwnerResult ownerResult = OwnerClient.issueCredit(secretKey);
+    	
+    	//request issuer to issue a consumable credential.
+    	TransportationType transportType = args.getTransportationType();
+    	Transport transport = TransportServiceFactory.getTransportService(transportType);
+    	CredentialType credentialType = args.getType();
+    	CredentialPojo credential = null;
+    	if(credentialType.getCode() == CredentialType.ORIGINAL.getCode()) {
+    		ResponseData<RequestConsumableCredentialResponse> resp = transport.requestOriginalConsumableCredential(args.getToOrgId(), args);
+    		credential =  resp.getResult().getCredentialPojo();
+    	}else if(credentialType.getCode() == CredentialType.ZKP.getCode()) {
+    		ResponseData<RequestZkpConsumableCredentialResponse> resp = transport.requestZkpConsumableCredential(toOrgId, args);
+    		credential = resp.getResult().getCredentialPojo();
+    	}
+        return new ResponseData<>(credential, ErrorCode.SUCCESS);
     }
 
+    private static ErrorCode checkGetConsumableCredentialArgs(
+    	GetConsumableCredentialArgs args, 
+    	WeIdAuthentication weIdAuthentication
+    ) {
+    	if(args == null) {
+    		logger.error("[checkGetConsumableCredentialArgs] The parameter is null!");
+    		return ErrorCode.ILLEGAL_INPUT;
+    	}
+    	return ErrorCode.SUCCESS;
+    }
+    
     /* (non-Javadoc)
      * @see com.webank.weid.rpc.CredentialPojoService#transferConsumableCredential(com.webank.weid.protocol.request.TransferConsumableCredentialArgs, com.webank.weid.protocol.base.WeIdAuthentication)
      */
     @Override
-    public ResponseData<Integer> transferConsumableCredential(TransferConsumableCredentialArgs args,
+    public ResponseData<Integer> transferConsumableCredential(
+    	TransferConsumableCredentialArgs args,
         WeIdAuthentication weIdAuthentication) {
-        // TODO Auto-generated method stub
+    	
         return null;
     }
 
@@ -1950,9 +2041,11 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
      * @see com.webank.weid.rpc.CredentialPojoService#consume(java.lang.String, com.webank.weid.protocol.base.CredentialPojo, com.webank.weid.protocol.base.WeIdAuthentication)
      */
     @Override
-    public ResponseData<Boolean> consume(String issuerWeId, CredentialPojo consumableCredential,
+    public ResponseData<Boolean> consume(
+    	String issuerWeId, 
+    	CredentialPojo consumableCredential,
         WeIdAuthentication weIdAuthentication) {
-        // TODO Auto-generated method stub
+    	
         return null;
     }
 

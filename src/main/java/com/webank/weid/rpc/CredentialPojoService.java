@@ -124,7 +124,7 @@ public interface CredentialPojoService {
      * @param weIdAuthentication user's authentication info
      * @return ownerResult generated from user's secret
      */
-    ResponseData<OwnerResult> prepareCredit(
+    ResponseData<String> prepareCredit(
         String randomStr,
         WeIdAuthentication weIdAuthentication
     );

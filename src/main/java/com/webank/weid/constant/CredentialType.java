@@ -9,25 +9,36 @@ public enum CredentialType {
     /**
      * the field is existed.
      */
-    ORIGINAL(0),
+    ORIGINAL(0, "original"),
 
     /**
      * the field is disclosed.
      */
-    ZKP(1),
+    ZKP(1, "zkp"),
 
     /**
      * the field is not disclosed.
      */
-    CONSUMABLE(2);
+    CONSUMABLE(2, "consumable");
 
     /**
-     * disclosure status.
+     * credential type code .
      */
-    private Integer type;
+    private Integer code;
+    
+    /**
+     * credential type name.
+     */
+    private String name;
 
-    CredentialType(Integer type) {
-        this.type = type;
+    /**
+     * constructor.
+     * @param code the credential type code.
+     * @param name the credential type name.
+     */
+    CredentialType(Integer code, String name) {
+        this.code = code;
+        this.name = name;
     }
 
     /**
@@ -35,7 +46,16 @@ public enum CredentialType {
      *
      * @return disclosure status of the field.
      */
-    public Integer getType() {
-        return type;
+    public Integer getCode() {
+        return code;
+    }
+    
+    /**
+     * get field disclosure status.
+     *
+     * @return disclosure status of the field.
+     */
+    public String getName() {
+        return name;
     }
 }

@@ -17,7 +17,7 @@
  *       along with weid-java-sdk.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.webank.weid.rpc.callback;
+package com.webank.weid.suite.transportService.callback.intf;
 
 import com.webank.weid.protocol.amop.CheckAmopMsgHealthArgs;
 import com.webank.weid.protocol.amop.GetEncryptKeyArgs;
@@ -117,5 +117,5 @@ public interface PushNotifyAllCallback {
     TransferCreditCredentialResponse onPush(
         TransferCreditCredentialArgs args
     );
-    
+
 }
