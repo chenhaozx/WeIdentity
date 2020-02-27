@@ -1,6 +1,6 @@
 package com.webank.weid.protocol.amop;
 
-import com.webank.wedpr.assethiding.OwnerResult;
+import com.webank.wedpr.confidentialpayment.OwnerResult;
 import lombok.Data;
 
 import com.webank.weid.protocol.base.PresentationE;

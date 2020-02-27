@@ -24,9 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.webank.wedpr.common.Utils;
 import org.apache.commons.lang3.StringUtils;
-import org.bcos.web3j.crypto.ECKeyPair;
-import org.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.web3j.crypto.ECKeyPair;
+import org.fisco.bcos.web3j.crypto.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,11 +78,16 @@ public class WeIdServiceImpl extends BaseService implements WeIdService {
         CreateWeIdDataResult result = new CreateWeIdDataResult();
         ECKeyPair keyPair = null;
 
-        try {
-            keyPair = Keys.createEcKeyPair();
-        } catch (Exception e) {
-            logger.error("Create weId failed.", e);
-            return new ResponseData<>(null, ErrorCode.WEID_KEYPAIR_CREATE_FAILED);
+        while (true) {
+            try {
+                keyPair = Keys.createEcKeyPair();
+                if (Utils.isKeyPairValid(keyPair)) {
+                    break;
+                }
+            } catch (Exception e) {
+                logger.error("Create weId failed.", e);
+                return new ResponseData<>(null, ErrorCode.WEID_KEYPAIR_CREATE_FAILED);
+            }
         }
 
         String publicKey = String.valueOf(keyPair.getPublicKey());

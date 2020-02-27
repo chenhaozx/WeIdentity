@@ -1,7 +1,6 @@
 package com.webank.weid.protocol.response;
 
-import com.webank.wedpr.assethiding.OwnerResult;
-
+import com.webank.wedpr.confidentialpayment.OwnerResult;
 import lombok.Data;
 
 /**
@@ -10,10 +9,10 @@ import lombok.Data;
 @Data
 public class RequestVerifierOwnerResultResponse {
 
-	private int errorCode;
+    private int errorCode;
 
     private String errorMessage;
-    
+
     /**
      * verifier's middle data.
      */

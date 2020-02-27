@@ -22,12 +22,13 @@ package com.webank.weid.service.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
 import org.apache.commons.lang3.StringUtils;
 import org.bcos.web3j.crypto.Sign.SignatureData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.webank.weid.constant.CredentialConstant;
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.constant.JsonSchemaConstant;
 import com.webank.weid.constant.WeIdConstant;
@@ -135,7 +136,7 @@ public class CptServiceImpl extends BaseService implements CptService {
 
             String weId = args.getWeIdAuthentication().getWeId();
             WeIdPrivateKey weIdPrivateKey = args.getWeIdAuthentication().getWeIdPrivateKey();
-            String cptJsonSchemaNew = this.cptSchemaToString(args.getCptJsonSchema());
+            String cptJsonSchemaNew = this.cptSchemaToString(args);
             RsvSignature rsvSignature = sign(
                 weId,
                 cptJsonSchemaNew,
@@ -174,7 +175,7 @@ public class CptServiceImpl extends BaseService implements CptService {
 
             String weId = args.getWeIdAuthentication().getWeId();
             WeIdPrivateKey weIdPrivateKey = args.getWeIdAuthentication().getWeIdPrivateKey();
-            String cptJsonSchemaNew = this.cptSchemaToString(args.getCptJsonSchema());
+            String cptJsonSchemaNew = this.cptSchemaToString(args);
             RsvSignature rsvSignature = sign(
                 weId,
                 cptJsonSchemaNew,
@@ -262,7 +263,7 @@ public class CptServiceImpl extends BaseService implements CptService {
 
             String weId = args.getWeIdAuthentication().getWeId();
             WeIdPrivateKey weIdPrivateKey = args.getWeIdAuthentication().getWeIdPrivateKey();
-            String cptJsonSchemaNew = this.cptSchemaToString(args.getCptJsonSchema());
+            String cptJsonSchemaNew = this.cptSchemaToString(args);
             RsvSignature rsvSignature = sign(
                 weId,
                 cptJsonSchemaNew,
@@ -352,12 +353,15 @@ public class CptServiceImpl extends BaseService implements CptService {
      * @param cptJsonSchema Map
      * @return String
      */
-    private String cptSchemaToString(Map<String, Object> cptJsonSchema) throws Exception {
+    private String cptSchemaToString(CptMapArgs args) throws Exception {
 
+        Map<String, Object> cptJsonSchema = args.getCptJsonSchema();
         Map<String, Object> cptJsonSchemaNew = new HashMap<String, Object>();
         cptJsonSchemaNew.put(JsonSchemaConstant.SCHEMA_KEY, JsonSchemaConstant.SCHEMA_VALUE);
         cptJsonSchemaNew.put(JsonSchemaConstant.TYPE_KEY, JsonSchemaConstant.DATA_TYPE_OBJECT);
         cptJsonSchemaNew.putAll(cptJsonSchema);
+        String cptType = args.getCptType().getName();
+        cptJsonSchemaNew.put(CredentialConstant.CPT_TYPE_KEY, cptType);
         return DataToolUtils.serialize(cptJsonSchemaNew);
     }
 
@@ -365,7 +369,7 @@ public class CptServiceImpl extends BaseService implements CptService {
      * @see com.webank.weid.rpc.CptService#queryCredentialTemplate(java.lang.Integer)
      */
     @Override
-    public ResponseData<CredentialTemplateEntity> queryCredentialTemplate(Integer cptId) {
+    public ResponseData<CredentialTemplateStorage> queryCredentialTemplate(Integer cptId) {
 
         return cptServiceEngine.queryCredentialTemplate(cptId);
     }

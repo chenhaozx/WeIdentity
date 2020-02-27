@@ -277,6 +277,13 @@ public enum ErrorCode {
         "timestamp creation does not support selectively disclosed credential"),
 
     /**
+     * Timestamp service does not support selectively-disclosed credential's presence.
+     */
+    CREDENTIAL_ZKP_GENERATE_SECRETKEY_FAILED(100439,
+        "timestamp creation does not support selectively disclosed credential"),
+
+
+    /**
      * The credential evidence contract failure: illegal input.
      */
     CREDENTIAL_EVIDENCE_CONTRACT_FAILURE_ILLEAGAL_INPUT(

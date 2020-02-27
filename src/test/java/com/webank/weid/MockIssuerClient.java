@@ -21,10 +21,11 @@ package com.webank.weid;
 
 import java.util.List;
 
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
 import com.webank.wedpr.selectivedisclosure.IssuerClient;
 import com.webank.wedpr.selectivedisclosure.IssuerResult;
 import com.webank.wedpr.selectivedisclosure.proto.TemplatePublicKey;
+
 import mockit.Mock;
 import mockit.MockUp;
 
@@ -41,10 +42,10 @@ public abstract class MockIssuerClient {
             public IssuerResult makeCredentialTemplate(List<String> list) {
                 IssuerResult restult = new IssuerResult();
                 restult.templateSecretKey = "templateSecretKey";
-                CredentialTemplateEntity template = new CredentialTemplateEntity();
+                CredentialTemplateStorage template = new CredentialTemplateStorage();
                 template.setCredentialKeyCorrectnessProof("credentialKeyCorrectnessProof");
                 template.setPublicKey(TemplatePublicKey.getDefaultInstance());
-                restult.credentialTemplateEntity = template;
+                restult.credentialTemplateStorage = template;
                 return restult;
             }
         };

@@ -1,19 +1,17 @@
 package com.webank.weid.protocol.response;
 
-import com.webank.wedpr.assethiding.RedeemerResult;
-
+import com.webank.wedpr.confidentialpayment.RedeemerResult;
 import lombok.Data;
 
 /**
  * @author tonychen 2020年1月16日
- *
  */
 @Data
 public class RequestIssueCreditResponse {
 
-	protected String errorMessage;
+    protected String errorMessage;
 
-	private Integer errorCode;
-	
-	private RedeemerResult redeemerResult;
+    private Integer errorCode;
+
+    private RedeemerResult redeemerResult;
 }

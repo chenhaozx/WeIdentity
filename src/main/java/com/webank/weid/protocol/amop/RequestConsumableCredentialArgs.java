@@ -2,16 +2,18 @@ package com.webank.weid.protocol.amop;
 
 import java.util.Map;
 
-import com.webank.wedpr.assethiding.OwnerResult;
+import com.webank.wedpr.confidentialpayment.OwnerResult;
 import lombok.Data;
 
+import com.webank.weid.constant.CredentialType;
+import com.webank.weid.protocol.amop.base.AmopBaseMsgArgs;
 import com.webank.weid.protocol.base.PresentationE;
 
 /**
  * @author tonychen 2020年2月6日
  */
 @Data
-public class RequestConsumableCredentialArgs {
+public class RequestConsumableCredentialArgs extends AmopBaseMsgArgs {
 
     /**
      * user's credential list.
@@ -31,8 +33,8 @@ public class RequestConsumableCredentialArgs {
     /**
      * original or zkp.
      */
-    private String credentialType;
-    
+    private CredentialType credentialType;
+
     /**
      * extra data which policy presenter can use it store some specific business data.
      */

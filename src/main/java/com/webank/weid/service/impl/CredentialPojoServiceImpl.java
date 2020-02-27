@@ -22,6 +22,7 @@ package com.webank.weid.service.impl;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,15 +30,19 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.webank.wedpr.assethiding.OwnerClient;
-import com.webank.wedpr.assethiding.OwnerResult;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.webank.pkeygen.exception.PkeyGenException;
+import com.webank.pkeygen.service.PkeyByRandomService;
 import com.webank.wedpr.common.Utils;
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
+import com.webank.wedpr.common.WedprException;
+import com.webank.wedpr.confidentialpayment.OwnerClient;
+import com.webank.wedpr.confidentialpayment.OwnerResult;
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
 import com.webank.wedpr.selectivedisclosure.PredicateType;
+import com.webank.wedpr.selectivedisclosure.SelectiveDisclosureUtils;
 import com.webank.wedpr.selectivedisclosure.UserClient;
 import com.webank.wedpr.selectivedisclosure.UserResult;
 import com.webank.wedpr.selectivedisclosure.VerifierClient;
-import com.webank.wedpr.selectivedisclosure.VerifierResult;
 import com.webank.wedpr.selectivedisclosure.proto.Predicate;
 import com.webank.wedpr.selectivedisclosure.proto.VerificationRule;
 import org.apache.commons.collections4.CollectionUtils;
@@ -59,6 +64,7 @@ import com.webank.weid.constant.TransportationType;
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.exception.DataTypeCastException;
 import com.webank.weid.exception.WeIdBaseException;
+import com.webank.weid.protocol.amop.RequestConsumableCredentialArgs;
 import com.webank.weid.protocol.base.Challenge;
 import com.webank.weid.protocol.base.ClaimPolicy;
 import com.webank.weid.protocol.base.Cpt;
@@ -110,8 +116,14 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         CredentialFieldDisclosureValue.EXISTED.getStatus().toString();
     private static WeIdService weIdService = new WeIdServiceImpl();
     private static CptService cptService = new CptServiceImpl();
-    private static Persistence dataDriver = new MysqlDriver();
+    private static Persistence dataDriver;
 
+    private static Persistence getDataDriver() {
+        if (dataDriver == null) {
+            dataDriver = new MysqlDriver();
+        }
+        return dataDriver;
+    }
 
     /**
      * Salt generator. Automatically fillin the map structure in a recursive manner.
@@ -651,7 +663,7 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
             return ErrorCode.SUCCESS;
         } catch (Exception e) {
             logger.error(
-                "Generic error occurred during verify cpt format when verifyCredential: " + e);
+                "Generic error occurred during verify cpt format when verifyCredential: {}", e);
             return ErrorCode.CREDENTIAL_ERROR;
         }
     }
@@ -662,12 +674,21 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         String encodedVerificationRule = (String) proof
             .get(ParamKeyConstant.PROOF_ENCODEDVERIFICATIONRULE);
         String verificationRequest = (String) proof.get(ParamKeyConstant.PROOF_VERIFICATIONREQUEST);
-        VerifierResult verifierResult =
-            VerifierClient.verifyProof(encodedVerificationRule, verificationRequest);
-        if (verifierResult.wedprErrorMessage == null) {
-            return new ResponseData<Boolean>(true, ErrorCode.SUCCESS);
+        VerificationRule verificationRule = null;
+        try {
+            verificationRule = VerificationRule
+                .parseFrom(Utils.stringToBytes(encodedVerificationRule));
+        } catch (InvalidProtocolBufferException e1) {
+            logger.error("[verifyZkpCredential] Parse verificationRule failed.");
+            return new ResponseData<Boolean>(false, ErrorCode.CREDENTIAL_ERROR);
         }
-        return new ResponseData<Boolean>(false, ErrorCode.CREDENTIAL_ERROR);
+        try {
+            VerifierClient.verifyProof(verificationRule, verificationRequest);
+        } catch (Exception e) {
+            logger.error("[verifyZkpCredential] verify verificationRule failed.");
+            return new ResponseData<Boolean>(false, ErrorCode.CREDENTIAL_ERROR);
+        }
+        return new ResponseData<Boolean>(true, ErrorCode.SUCCESS);
     }
 
     private static Boolean isZkpCredential(CredentialPojo credential) {
@@ -692,10 +713,16 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
 
         Map<String, String> credentialInfoMap = buildCredentialInfo(preCredential, claimJson);
 
-        ResponseData<CredentialTemplateEntity> resp = cptService.queryCredentialTemplate(cptId);
-        CredentialTemplateEntity credentialTemplate = resp.getResult();
+        ResponseData<CredentialTemplateStorage> resp = cptService.queryCredentialTemplate(cptId);
+        CredentialTemplateStorage credentialTemplate = resp.getResult();
 
-        UserResult userResult = UserClient.makeCredential(credentialInfoMap, credentialTemplate);
+        UserResult userResult = null;
+        try {
+            userResult = UserClient.makeCredential(credentialInfoMap, credentialTemplate);
+        } catch (WedprException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         // masterSecret is saved by User
         String masterSecret = userResult.masterSecret;
@@ -710,7 +737,7 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         //String id=(String)preCredential.getClaim().get(CredentialConstant.CREDENTIAL_META_KEY_ID);
 
         //save masterSecret and credentialSecretsBlindingFactors to persistence.
-        ResponseData<Integer> dbResp = dataDriver
+        ResponseData<Integer> dbResp = getDataDriver()
             .saveOrUpdate(DataDriverConstant.DOMAIN_USER_MASTER_SECRET, id, json);
         if (dbResp.getErrorCode().intValue() != ErrorCode.SUCCESS.getCode()) {
             logger.error(
@@ -800,7 +827,8 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
             String predicateKey = entry.getKey();
             Object predicateValue = entry.getValue();
             PredicateType predicateType = getPredicateType(predicateKey);
-            Predicate predicate = Utils.makePredicate(key, predicateType, (Integer) predicateValue);
+            Predicate predicate = SelectiveDisclosureUtils
+                .makePredicate(key, predicateType, (Integer) predicateValue);
             predicateList.add(predicate);
         }
     }
@@ -831,6 +859,33 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
                 return null;
 
         }
+    }
+
+    private static CreateCredentialPojoArgs prepareCredentialArgs(
+        CreateConsumableCredentialPojoArgs args
+    ) {
+
+        CreateCredentialPojoArgs createArgs = new CreateCredentialPojoArgs();
+        createArgs.setClaim(args.getClaim());
+        createArgs.setCptId(args.getCptId());
+        createArgs.setExpirationDate(args.getExpirationDate());
+        createArgs.setId(args.getId());
+        createArgs.setIssuanceDate(args.getIssuanceDate());
+        createArgs.setIssuer(args.getIssuer());
+        createArgs.setType(args.getCredentialType());
+        createArgs.setWeIdAuthentication(args.getWeIdAuthentication());
+        return createArgs;
+    }
+
+    private static ErrorCode checkGetConsumableCredentialArgs(
+        GetConsumableCredentialArgs args,
+        WeIdAuthentication weIdAuthentication
+    ) {
+        if (args == null) {
+            logger.error("[checkGetConsumableCredentialArgs] The parameter is null!");
+            return ErrorCode.ILLEGAL_INPUT;
+        }
+        return ErrorCode.SUCCESS;
     }
 
     /* (non-Javadoc)
@@ -931,49 +986,33 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         }
     }
 
-    
     /* (non-Javadoc)
      * @see com.webank.weid.rpc.CredentialPojoService#createConsumableCredential(com.webank.weid.protocol.request.CreateConsumableCredentialPojoArgs)
      */
     @Override
     public ResponseData<CredentialPojo> createConsumableCredential(
         CreateConsumableCredentialPojoArgs args) {
-    	
-    	if(args == null || StringUtils.isBlank(args.getCreditCredential())) {
-    		logger.error("[createConsumableCredential] Input parameters are illegal! ");
-    		return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
-    	}
-    	
-    	CreateCredentialPojoArgs createArgs = new CreateCredentialPojoArgs();
-    	prepareCredentialArgs(args, createArgs);
-    	ResponseData<CredentialPojo> result = this.createCredential(createArgs);
-    	Integer errorCode = result.getErrorCode();
-    	if(errorCode.intValue() != ErrorCode.SUCCESS.getCode()) {
-    		logger.error("[createConsumableCredential] Create consumable credential failed. ");
-    		return result;
-    	}
-    	
-    	CredentialPojo credential = result.getResult();
-    	credential.putProofValue("creditCredential", args.getCreditCredential());
-    	credential.addType(CredentialType.CONSUMABLE.getName());
+
+        if (args == null || StringUtils.isBlank(args.getCreditCredential())) {
+            logger.error("[createConsumableCredential] Input parameters are illegal! ");
+            return new ResponseData<>(null, ErrorCode.ILLEGAL_INPUT);
+        }
+
+        CreateCredentialPojoArgs createArgs = prepareCredentialArgs(args);
+
+        ResponseData<CredentialPojo> result = this.createCredential(createArgs);
+        Integer errorCode = result.getErrorCode();
+        if (errorCode.intValue() != ErrorCode.SUCCESS.getCode()) {
+            logger.error("[createConsumableCredential] Create consumable credential failed. ");
+            return result;
+        }
+
+        CredentialPojo credential = result.getResult();
+        credential.putProofValue("creditCredential", args.getCreditCredential());
+        credential.addType(CredentialType.CONSUMABLE.getName());
         return result;
     }
-    
-    private static void prepareCredentialArgs(
-    	CreateConsumableCredentialPojoArgs args, 
-    	CreateCredentialPojoArgs createArgs
-    ) {
-    	
-    	createArgs.setClaim(args.getClaim());
-    	createArgs.setCptId(args.getCptId());
-    	createArgs.setExpirationDate(args.getExpirationDate());
-    	createArgs.setId(args.getId());
-    	createArgs.setIssuanceDate(args.getIssuanceDate());
-    	createArgs.setIssuer(args.getIssuer());
-    	createArgs.setType(args.getCredentialType());
-    	createArgs.setWeIdAuthentication(args.getWeIdAuthentication());
-    }
-    
+
     /**
      * Add an extra signer and signature to a Credential. Multiple signatures will be appended in an
      * embedded manner.
@@ -1827,34 +1866,32 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
             List<Predicate> predicateList = new ArrayList<>();
 
             processZkpPolicy(claimPolicy, revealedAttributeList, predicateList);
-            VerificationRule verificationRule =
-                VerificationRule.newBuilder()
-                    .addAllRevealedAttribute(revealedAttributeList)
-                    .addAllPredicateAttribute(predicateList)
-                    .build();
+            VerificationRule verificationRule = SelectiveDisclosureUtils
+                .makeVerificationRule(revealedAttributeList, predicateList);
             String encodedVerificationRule = Utils.protoToEncodedString(verificationRule);
+
             ResponseData<String> dbResp =
-                dataDriver.get(
+                getDataDriver().get(
                     DataDriverConstant.DOMAIN_USER_CREDENTIAL_SIGNATURE,
                     credential.getId());
             Integer cptId = credentialClone.getCptId();
             String id = new StringBuffer().append(userId).append("_").append(cptId).toString();
             String newCredentialSignature = dbResp.getResult();
             ResponseData<String> masterKeyResp =
-                dataDriver.get(
+                getDataDriver().get(
                     DataDriverConstant.DOMAIN_USER_MASTER_SECRET,
                     id);
             HashMap<String, String> userCredentialInfo = DataToolUtils
                 .deserialize(masterKeyResp.getResult(), HashMap.class);
             String masterSecret = userCredentialInfo.get("masterSecret");
-            ResponseData<CredentialTemplateEntity> credentialTemplateResp = cptService
+            ResponseData<CredentialTemplateStorage> credentialTemplateResp = cptService
                 .queryCredentialTemplate(cptId);
-            CredentialTemplateEntity credentialTemplate = credentialTemplateResp.getResult();
+            CredentialTemplateStorage credentialTemplate = credentialTemplateResp.getResult();
             Map<String, String> credentialInfoMap = new HashMap<>();
             credentialInfoMap = JsonUtil.credentialToMonolayer(credential);
             UserResult userResult =
                 UserClient.proveCredentialInfo(
-                    encodedVerificationRule,
+                    verificationRule,
                     newCredentialSignature, //from db
                     credentialInfoMap,  //from credential
                     credentialTemplate, //from blockchain and cpt
@@ -1949,14 +1986,13 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
         }
     }
 
-
     /* (non-Javadoc)
      * @see com.webank.weid.rpc.CredentialPojoService#createZkpCredential(com.webank.weid.protocol.request.CreateZkpCredentialPojoArgs)
      */
     @Override
     public ResponseData<CredentialPojo> createZkpCredential(CreateZkpCredentialPojoArgs args) {
-       
-    	return null;
+
+        return null;
     }
 
     /* (non-Javadoc)
@@ -1966,9 +2002,30 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
     public ResponseData<String> prepareCredit(
         String randomStr,
         WeIdAuthentication weIdAuthentication) {
-    	
-    	//PkeyByRandomService pkeyByRandomService = new PkeyByRandomService();
-        return null;
+        String secretKey = null;
+        String privateKey = weIdAuthentication.getWeIdPrivateKey().getPrivateKey();
+        PkeyByRandomService pkeyByRandomService = new PkeyByRandomService();
+        while (true) {
+            try {
+                //由于生成的secretKey有概率性不可用，因此不能直接用传入的randomStr，否则可能失败。
+                String randomId = UUID.randomUUID().toString();
+                byte[] key = pkeyByRandomService
+                    .generatePrivateKeyByChainCode(DataToolUtils.stringToByteArray(privateKey),
+                        randomId);
+
+                //secretKey = DataToolUtils.byteToString(key);
+                if (Utils.isSecretKeyValid(key)) {
+                    secretKey = Base64.getEncoder().encodeToString(key);
+                    break;
+                }
+            } catch (Exception e) {
+                logger.error("[prepareCredit] Generate random secret key failed, {}", e);
+                return new ResponseData<String>(secretKey,
+                    ErrorCode.CREDENTIAL_ZKP_GENERATE_SECRETKEY_FAILED);
+            }
+        }
+
+        return new ResponseData<String>(secretKey, ErrorCode.SUCCESS);
     }
 
     /* (non-Javadoc)
@@ -1976,64 +2033,90 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
      */
     @Override
     public ResponseData<CredentialPojo> getConsumableCredential(
-    	GetConsumableCredentialArgs args,
+        GetConsumableCredentialArgs args,
         WeIdAuthentication weIdAuthentication) {
-    	
-    	//check args
-    	ErrorCode checkArgsResult = checkGetConsumableCredentialArgs(args, weIdAuthentication);
-    	if(checkArgsResult.getCode() != ErrorCode.SUCCESS.getCode()) {
-    		logger.error("[getConsumableCredential] Input parameters error!");
-    		return new ResponseData<>(null, checkArgsResult);
-    	}
-    	//prepare presentation
-    	PolicyAndChallenge policyAndChallenge = args.getPolicyAndChallenge();
-    	ResponseData<PresentationE> presentationResult = createPresentation(
-    		args.getCredentialPojoList(), 
-    		policyAndChallenge.getPresentationPolicyE(), 
-    	    policyAndChallenge.getChallenge(), 
-    		weIdAuthentication);
-    	
-    	String credentialId = policyAndChallenge.getPresentationPolicyE().getExtra().get("credentialId");
-    	String seqId = policyAndChallenge.getPresentationPolicyE().getExtra().get("seqId");
-    	ResponseData<String>secretKeyResp = prepareCredit(credentialId, weIdAuthentication);
-    	String secretKey = secretKeyResp.getResult();
-    	
-    	OwnerResult ownerResult = OwnerClient.issueCredit(secretKey);
-    	
-    	//request issuer to issue a consumable credential.
-    	TransportationType transportType = args.getTransportationType();
-    	Transport transport = TransportServiceFactory.getTransportService(transportType);
-    	CredentialType credentialType = args.getType();
-    	CredentialPojo credential = null;
-    	if(credentialType.getCode() == CredentialType.ORIGINAL.getCode()) {
-    		ResponseData<RequestConsumableCredentialResponse> resp = transport.requestOriginalConsumableCredential(args.getToOrgId(), args);
-    		credential =  resp.getResult().getCredentialPojo();
-    	}else if(credentialType.getCode() == CredentialType.ZKP.getCode()) {
-    		ResponseData<RequestZkpConsumableCredentialResponse> resp = transport.requestZkpConsumableCredential(toOrgId, args);
-    		credential = resp.getResult().getCredentialPojo();
-    	}
+
+        //1. check args
+        ErrorCode checkArgsResult = checkGetConsumableCredentialArgs(args, weIdAuthentication);
+        if (checkArgsResult.getCode() != ErrorCode.SUCCESS.getCode()) {
+            logger.error("[getConsumableCredential] Input parameters error!");
+            return new ResponseData<>(null, checkArgsResult);
+        }
+        //2. prepare presentation
+        PolicyAndChallenge policyAndChallenge = args.getPolicyAndChallenge();
+        ResponseData<PresentationE> presentationResult = createPresentation(
+            args.getCredentialPojoList(),
+            policyAndChallenge.getPresentationPolicyE(),
+            policyAndChallenge.getChallenge(),
+            weIdAuthentication);
+
+        if (presentationResult.getErrorCode() != ErrorCode.SUCCESS.getCode()) {
+            logger.error("[getConsumableCredential] Create presentation error!");
+            return new ResponseData<CredentialPojo>(null,
+                ErrorCode.getTypeByErrorCode(presentationResult.getErrorCode()));
+        }
+        PresentationE presentation = presentationResult.getResult();
+        String credentialId = policyAndChallenge.getPresentationPolicyE().getExtra()
+            .get("credentialId");
+        String seqId = policyAndChallenge.getPresentationPolicyE().getExtra().get("seqId");
+        ResponseData<String> secretKeyResp = prepareCredit(credentialId, weIdAuthentication);
+        String secretKey = secretKeyResp.getResult();
+
+        OwnerResult ownerResult = null;
+        try {
+            ownerResult = OwnerClient.issueCredit(secretKey);
+        } catch (PkeyGenException e) {
+            logger.error("[getConsumableCredential] generate pk failed!", e);
+            return new ResponseData<CredentialPojo>(null, ErrorCode.UNKNOW_ERROR);
+
+        } catch (WedprException e) {
+            logger.error("[getConsumableCredential] Create presentation error!", e);
+            return new ResponseData<CredentialPojo>(null, ErrorCode.UNKNOW_ERROR);
+        }
+
+        //request issuer to issue a consumable credential.
+        TransportationType transportType = args.getTransportationType();
+        Transport transport = TransportServiceFactory.getTransportService(transportType);
+        CredentialType credentialType = args.getType();
+        CredentialPojo credential = null;
+        if (credentialType.getCode() == CredentialType.ORIGINAL.getCode()) {
+            RequestConsumableCredentialArgs requestConsumableCredentialArgs = new RequestConsumableCredentialArgs();
+            requestConsumableCredentialArgs.setCredentialType(credentialType);
+            requestConsumableCredentialArgs.setOwnerResult(ownerResult);
+            requestConsumableCredentialArgs.setPresentation(presentation);
+            requestConsumableCredentialArgs.setSeqId(seqId);
+            ResponseData<RequestConsumableCredentialResponse> resp = transport
+                .requestOriginalConsumableCredential(
+                    args.getToOrgId(),
+                    requestConsumableCredentialArgs);
+            credential = resp.getResult().getCredentialPojo();
+        } else if (credentialType.getCode() == CredentialType.ZKP.getCode()) {
+//    		RequestZkpConsumableCredentialArgs zkpArgs = new RequestZkpConsumableCredentialArgs();
+//    		//zkpArgs.setCredentialType(credentialType);
+//    		zkpArgs.setOwnerResult(ownerResult);
+//    		zkpArgs.setPresentation(presentation);
+//    		zkpArgs.setSeqId(seqId);
+//    		ResponseData<RequestZkpConsumableCredentialResponse> resp = transport.requestZkpConsumableCredential(args.getToOrgId(), zkpArgs);
+//    		credential = resp.getResult().getCredentialPojo();
+        }
         return new ResponseData<>(credential, ErrorCode.SUCCESS);
     }
 
-    private static ErrorCode checkGetConsumableCredentialArgs(
-    	GetConsumableCredentialArgs args, 
-    	WeIdAuthentication weIdAuthentication
-    ) {
-    	if(args == null) {
-    		logger.error("[checkGetConsumableCredentialArgs] The parameter is null!");
-    		return ErrorCode.ILLEGAL_INPUT;
-    	}
-    	return ErrorCode.SUCCESS;
-    }
-    
     /* (non-Javadoc)
      * @see com.webank.weid.rpc.CredentialPojoService#transferConsumableCredential(com.webank.weid.protocol.request.TransferConsumableCredentialArgs, com.webank.weid.protocol.base.WeIdAuthentication)
      */
     @Override
     public ResponseData<Integer> transferConsumableCredential(
-    	TransferConsumableCredentialArgs args,
+        TransferConsumableCredentialArgs args,
         WeIdAuthentication weIdAuthentication) {
-    	
+
+        PolicyAndChallenge policyAndChallenge = args.getPolicyAndChallenge();
+        ResponseData<PresentationE> presentationResult = createPresentation(
+            args.getCredentialPojoList(),
+            policyAndChallenge.getPresentationPolicyE(),
+            policyAndChallenge.getChallenge(),
+            weIdAuthentication);
+
         return null;
     }
 
@@ -2042,10 +2125,10 @@ public class CredentialPojoServiceImpl extends BaseService implements Credential
      */
     @Override
     public ResponseData<Boolean> consume(
-    	String issuerWeId, 
-    	CredentialPojo consumableCredential,
+        String issuerWeId,
+        CredentialPojo consumableCredential,
         WeIdAuthentication weIdAuthentication) {
-    	
+
         return null;
     }
 

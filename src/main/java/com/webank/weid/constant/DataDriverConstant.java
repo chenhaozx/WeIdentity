@@ -21,7 +21,7 @@ package com.webank.weid.constant;
 
 /**
  * constant for DataDriver.
- * 
+ *
  * @author tonychen 2019年3月25日
  */
 public final class DataDriverConstant {
@@ -45,72 +45,72 @@ public final class DataDriverConstant {
      * jdbc user password properties.
      */
     public static final String JDBC_USER_PASSWORD = "jdbc.password";
-    
+
     /**
      * jdbc maxActive properties.
      */
     public static final String JDBC_MAX_ACTIVE = "jdbc.maxActive";
-    
+
     /**
      * jdbc minIdle properties.
      */
     public static final String JDBC_MIN_IDLE = "jdbc.minIdle";
-    
+
     /**
      * jdbc minIdle properties.
      */
     public static final String JDBC_MAX_IDLE = "jdbc.maxIdle";
-    
+
     /**
      * jdbc maxWait properties.
      */
     public static final String JDBC_MAX_WAIT = "jdbc.maxWait";
-    
+
     /**
      * jdbc timeBetweenEvictionRunsMillis properties.
      */
     public static final String JDBC_TIME_BETWEEN_ERM = "jdbc.timeBetweenEvictionRunsMillis";
-    
+
     /**
      * jdbc numTestsPerEvictionRun properties.
      */
     public static final String JDBC_NUM_TEST_PER_ER = "jdbc.numTestsPerEvictionRun";
-    
+
     /**
      * jdbc maxWait properties.
      */
     public static final String JDBC_MIN_EITM = "jdbc.minEvictableIdleTimeMillis";
-    
+
     /**
      * jdbc driverClassName.
      */
     public static final String JDBC_MYSQL_DRIVER_CLASS_NAME = "com.mysql.jdbc.Driver";
-   
+
     /**
      * jdbc removeAbandoned.
      */
     public static final String JDBC_REMOVE_ABANDONED = "true";
-    
+
     /**
      * jdbc removeAbandonedTimeout.
      */
     public static final String JDBC_REMOVE_ABANDONED_TIMEOUT = "180";
-    
+
     /**
      * jdbc testOnBorrow.
      */
     public static final String JDBC_TEST_ON_BORROW = "false";
-    
+
     /**
      * jdbc testOnWhile.
      */
     public static final String JDBC_TEST_ON_WHILE = "true";
-    
+
     /**
      * jdbc validationQuery.
      */
     public static final String JDBC_VALIDATION_QUERY = "SELECT 1";
-    
+
     /**
      * sql execute status.
      */
@@ -135,7 +135,7 @@ public final class DataDriverConstant {
      * sql index.
      */
     public static final int SQL_INDEX_THIRD = 3;
-    
+
     /**
      * the key of ConnectionPool.
      */
@@ -155,9 +155,9 @@ public final class DataDriverConstant {
     public static final String POOL_NUM_TEST_PER_ER = "numTestsPerEvictionRun";
     public static final String POOL_VALIDATION_QUERY = "validationQuery";
     public static final String POOL_MIN_EITM = "minEvictableIdleTimeMillis";
-    
+
     /**
-     *  the default value for pool.
+     * the default value for pool.
      */
     public static final String POOL_MAX_ACTIVE_DEFAULT_VALUE = "50";
     public static final String POOL_MIN_IDLE_DEFAULT_VALUE = "5";
@@ -172,7 +172,7 @@ public final class DataDriverConstant {
      */
     public static final String DOMAIN_DEFAULT = "domain.default";
     public static final String DOMAIN_DEFAULT_TIMEOUT = "domain.default.timeout";
-    
+
     /**
      * 系统domain之私钥存储domainKey.
      */
@@ -181,6 +181,8 @@ public final class DataDriverConstant {
     public static final String DOMAIN_ISSUER_TEMPLATE_SECRET = "domain.templateSecret";
 
     public static final String DOMAIN_USER_MASTER_SECRET = "domain.masterKey";
- 
+
+    public static final String DOMAIN_CONSUMABLE_CREDENTIAL = "domain.consumablecredential";
+
     public static final String DOMAIN_USER_CREDENTIAL_SIGNATURE = "domain.credentialSignature";
 }

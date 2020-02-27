@@ -72,9 +72,9 @@ public class CreateCredentialPojoArgs<T> {
      * Optional:credential context.
      */
     private String context = CredentialUtils.getDefaultCredentialContext();
-    
+
     /**
-	  * credential type.
-	  */
-	 private CredentialType type = CredentialType.ZKP;
+     * credential type.
+     */
+    private CredentialType type = CredentialType.ORIGINAL;
 }

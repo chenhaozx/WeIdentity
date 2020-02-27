@@ -19,7 +19,11 @@
 
 package com.webank.weid.rpc.callback;
 
+import com.webank.weid.suite.transportService.callback.CommonCallback;
+
 public interface RegistCallBack {
     
     public void registAmopCallback(Integer msgType, AmopCallback routeCallBack);
+    
+    //public void registCallback(Integer msgType, CommonCallback routeCallBack);
 }

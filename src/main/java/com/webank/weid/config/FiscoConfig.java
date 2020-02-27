@@ -45,6 +45,7 @@ public class FiscoConfig {
     private String issuerAddress;
     private String evidenceAddress;
     private String specificIssuerAddress;
+    private String hiddenAssetAddress;
     private String chainId;
     private String web3sdkTimeout;
     private String web3sdkCorePoolSize;
@@ -78,6 +79,7 @@ public class FiscoConfig {
             issuerAddress = PropertyUtils.getProperty("issuer.contractaddress");
             evidenceAddress = PropertyUtils.getProperty("evidence.contractaddress");
             specificIssuerAddress = PropertyUtils.getProperty("specificissuer.contractaddress");
+            hiddenAssetAddress = PropertyUtils.getProperty("hiddenAsset.contractAddress");
             chainId = PropertyUtils.getProperty("chain.id");
             web3sdkTimeout = PropertyUtils.getProperty("web3sdk.timeout");
             web3sdkCorePoolSize = PropertyUtils.getProperty("web3sdk.core-pool-size");

@@ -133,8 +133,11 @@ public class AmopCallback implements PushNotifyAllCallback {
      */
     @Override
     public RequestConsumableCredentialResponse onPush(RequestConsumableCredentialArgs args) {
-        // TODO Auto-generated method stub
-        return null;
+    	
+    	RequestConsumableCredentialResponse result = new RequestConsumableCredentialResponse();
+        result.setErrorCode(ErrorCode.AMOP_MSG_CALLBACK_SERVER_SIDE_NO_HANDLE.getCode());
+        result.setErrorMessage(ErrorCode.AMOP_MSG_CALLBACK_SERVER_SIDE_NO_HANDLE.getCodeDesc());
+        return result;
     }
 
     /* (non-Javadoc)

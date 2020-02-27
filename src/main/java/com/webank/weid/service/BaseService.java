@@ -21,7 +21,6 @@ package com.webank.weid.service;
 
 import java.io.IOException;
 
-import com.webank.wedpr.common.NativeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,16 +60,6 @@ public abstract class BaseService {
         }
         if (StringUtils.isEmpty(fiscoConfig.getCurrentOrgId())) {
             logger.error("[BaseService] the blockchain orgId is blank.");
-        }
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("windows")) {
-
-            try {
-                NativeUtils.loadLibraryFromJar("/WeDPR_dynamic_lib/libeay32md.dll");
-                NativeUtils.loadLibraryFromJar("/WeDPR_dynamic_lib/ssleay32md.dll");
-            } catch (IOException e) {
-                logger.error("[BaseService] the blockchain orgId is blank.");
-            }
         }
     }
 

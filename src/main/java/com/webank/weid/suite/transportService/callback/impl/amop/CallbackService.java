@@ -17,39 +17,56 @@
  *       along with weid-java-sdk.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.webank.weid.suite.transportService.callback.impl;
+package com.webank.weid.suite.transportService.callback.impl.amop;
 
-import com.webank.weid.constant.AmopMsgType;
 import com.webank.weid.protocol.base.PolicyAndChallenge;
+import com.webank.weid.protocol.request.CreateConsumableCredentialPojoArgs;
 import com.webank.weid.rpc.AmopService;
 import com.webank.weid.service.BaseService;
 import com.webank.weid.service.impl.AmopServiceImpl;
 
-public abstract class PresentationPolicyService extends BaseService {
-    
+public abstract class CallbackService extends BaseService {
+
     protected AmopService amopService = new AmopServiceImpl();
-    
-    private static PresentationCallback presentationCallback = new PresentationCallback();
-    
+
+//    private static PresentationCallback presentationCallback = new PresentationCallback();
+//    private static IssueConsumableCredentialCallback consumableCallback = new IssueConsumableCredentialCallback();
     /**
      * 无参构造器,自动注册callback.
      */
-    public PresentationPolicyService() {
-        presentationCallback.registPolicyService(this);
-        amopService.registerCallback(
-            AmopMsgType.GET_POLICY_AND_CHALLENGE.getValue(), 
-            presentationCallback
-        );
-    }
+//    public CallbackService() {
+//        presentationCallback.registPolicyService(this);
+//        amopService.registerCallback(
+//            AmopMsgType.GET_POLICY_AND_CHALLENGE.getValue(), 
+//            presentationCallback
+//        );
+//        amopService.registerCallback(
+//                AmopMsgType.GET_CONSUMABLE_CREDENTIAL.getValue(), 
+//                consumableCallback
+//            );
+//    }
 
     /**
      * 获取PolicyAndChallenge.
+     *
      * @param policyId 策略编号
      * @param targetUserWeId user WeId
      * @return 返回PresentationPolicyE对象数据
      */
     public abstract PolicyAndChallenge policyAndChallengeOnPush(
-        String policyId, 
+        String policyId,
+        String targetUserWeId
+    );
+
+    /**
+     * 获取PolicyAndChallenge.
+     *
+     * @param policyId 策略编号
+     * @param targetUserWeId user WeId
+     * @return 返回PresentationPolicyE对象数据
+     */
+    public abstract <T> CreateConsumableCredentialPojoArgs<T> getConsumableCredentialArgs(
+        String policyId,
         String targetUserWeId
     );
 }

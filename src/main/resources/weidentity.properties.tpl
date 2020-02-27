@@ -42,6 +42,7 @@ domain.masterKey=datasource1:master_secret
 
 domain.credentialSignature=datasource1:credential_signature
 
+domain.consumablecredential=datasource1:consumableCredential
 # Salt length for Proof creation.
 salt.length=5
 

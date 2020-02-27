@@ -75,7 +75,7 @@ public final class ParamKeyConstant {
     public static final String PROOF_NONCE = "nonce";
     public static final String PROOF_VERIFICATIONREQUEST = "verificationRequest";
     public static final String PROOF_ENCODEDVERIFICATIONRULE = "encodedVerificationRule";
-    
+
 
     /**
      * 秘钥存储KEY.
@@ -88,4 +88,11 @@ public final class ParamKeyConstant {
 
 
     public static final String TRNSACTION_RECEIPT_STATUS_SUCCESS = "0x0";
+
+    public static final String SEQ_ID = "seqId";
+    public static final String POLICY_ID = "policyId";
+    public static final String CHALLENGE = "challenge";
+    public static final String TARGET_WEID = "targetWeId";
+    public static final String KEY_CREDENTIAL_ID = "credentialId";
+
 }

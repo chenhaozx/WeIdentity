@@ -24,7 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
+import com.webank.wedpr.common.WedprException;
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
 import com.webank.wedpr.selectivedisclosure.UserClient;
 import com.webank.wedpr.selectivedisclosure.UserResult;
 import org.apache.commons.lang3.StringUtils;
@@ -127,6 +128,7 @@ public class AmopServiceImpl extends BaseService implements AmopService {
     private ResponseData<GetPolicyAndChallengeResponse> getPolicyAndChallenge(
         String toOrgId,
         GetPolicyAndChallengeArgs args) {
+
         return this.getImpl(
             fiscoConfig.getCurrentOrgId(),
             toOrgId,
@@ -364,8 +366,8 @@ public class AmopServiceImpl extends BaseService implements AmopService {
         }
 
         Integer cptId = credentialPojo.getCptId();
-        ResponseData<CredentialTemplateEntity> resp1 = cptService.queryCredentialTemplate(cptId);
-        CredentialTemplateEntity template = resp1.getResult();
+        ResponseData<CredentialTemplateStorage> resp1 = cptService.queryCredentialTemplate(cptId);
+        CredentialTemplateStorage template = resp1.getResult();
         String id = new StringBuffer().append(userId).append("_").append(cptId)
             .toString();
         ResponseData<String> dbResp = dataDriver
@@ -379,13 +381,19 @@ public class AmopServiceImpl extends BaseService implements AmopService {
         String credentialSecretsBlindingFactors = userInfoMap
             .get("credentialSecretsBlindingFactors");
         //有问题
-        UserResult userResult = UserClient.blindCredentialSignature(
-            response.getCredentialSignature(),
-            newCredentialInfo,
-            template,
-            masterSecret,
-            credentialSecretsBlindingFactors,
-            response.getIssuerNonce());
+        UserResult userResult = null;
+        try {
+            userResult = UserClient.blindCredentialSignature(
+                response.getCredentialSignature(),
+                newCredentialInfo,
+                template,
+                masterSecret,
+                credentialSecretsBlindingFactors,
+                response.getIssuerNonce());
+        } catch (WedprException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         String newCredentialSignature = userResult.credentialSignature;
 
         //String dbKey = (String) preCredential.getClaim()

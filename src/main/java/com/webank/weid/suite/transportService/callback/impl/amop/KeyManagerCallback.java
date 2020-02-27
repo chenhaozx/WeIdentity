@@ -1,8 +1,5 @@
-package com.webank.weid.suite.transportService.callback.impl;
-
-import java.util.ArrayList;
 /*
- *       Copyright© (2018-2019) WeBank Co., Ltd.
+ *       Copyright© (2018-2020) WeBank Co., Ltd.
  *
  *       This file is part of weid-java-sdk.
  *
@@ -20,6 +17,9 @@ import java.util.ArrayList;
  *       along with weid-java-sdk.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+package com.webank.weid.suite.transportService.callback.impl.amop;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,33 +44,52 @@ import com.webank.weid.suite.api.persistence.Persistence;
 import com.webank.weid.suite.persistence.sql.driver.MysqlDriver;
 import com.webank.weid.util.DataToolUtils;
 
+    /*
+     *       Copyright© (2018-2019) WeBank Co., Ltd.
+     *
+     *       This file is part of weid-java-sdk.
+     *
+     *       weid-java-sdk is free software: you can redistribute it and/or modify
+     *       it under the terms of the GNU Lesser General Public License as published by
+     *       the Free Software Foundation, either version 3 of the License, or
+     *       (at your option) any later version.
+     *
+     *       weid-java-sdk is distributed in the hope that it will be useful,
+     *       but WITHOUT ANY WARRANTY; without even the implied warranty of
+     *       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     *       GNU Lesser General Public License for more details.
+     *
+     *       You should have received a copy of the GNU Lesser General Public License
+     *       along with weid-java-sdk.  If not, see <https://www.gnu.org/licenses/>.
+     */
+
 public class KeyManagerCallback extends AmopCallback {
-    
-    private static final Logger logger =  LoggerFactory.getLogger(KeyManagerCallback.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(KeyManagerCallback.class);
 
     private Persistence dataDriver;
-    
+
     private WeIdService weidService;
-    
+
     private WeIdService getWeIdService() {
         if (weidService == null) {
             weidService = new WeIdServiceImpl();
         }
         return weidService;
     }
-    
+
     private Persistence getDataDriver() {
         if (dataDriver == null) {
             dataDriver = new MysqlDriver();
         }
         return dataDriver;
     }
-    
+
     @Override
     public GetEncryptKeyResponse onPush(GetEncryptKeyArgs arg) {
         logger.info("[KeyManagerCallback.onPush] begin query key param:{}", arg);
-        GetEncryptKeyResponse encryptResponse = new GetEncryptKeyResponse(); 
-        ResponseData<String>  keyResponse = this.getDataDriver().get(
+        GetEncryptKeyResponse encryptResponse = new GetEncryptKeyResponse();
+        ResponseData<String> keyResponse = this.getDataDriver().get(
             DataDriverConstant.DOMAIN_ENCRYPTKEY, arg.getKeyId());
         if (keyResponse.getErrorCode().intValue() == ErrorCode.SUCCESS.getCode()
             && StringUtils.isBlank(keyResponse.getResult())) {
@@ -87,7 +106,7 @@ public class KeyManagerCallback extends AmopCallback {
             }
             try {
                 Map<String, Object> keyMap = DataToolUtils.deserialize(
-                    keyResponse.getResult(), 
+                    keyResponse.getResult(),
                     new HashMap<String, Object>().getClass()
                 );
                 if (!checkAuthority(arg, keyMap)) { // 检查是否有权限
@@ -95,9 +114,9 @@ public class KeyManagerCallback extends AmopCallback {
                     encryptResponse.setErrorMessage(
                         ErrorCode.ENCRYPT_KEY_NO_PERMISSION.getCodeDesc());
                 } else {
-                    encryptResponse.setEncryptKey((String)keyMap.get(ParamKeyConstant.KEY_DATA));
+                    encryptResponse.setEncryptKey((String) keyMap.get(ParamKeyConstant.KEY_DATA));
                     encryptResponse.setErrorCode(ErrorCode.SUCCESS.getCode());
-                    encryptResponse.setErrorMessage(ErrorCode.SUCCESS.getCodeDesc());  
+                    encryptResponse.setErrorMessage(ErrorCode.SUCCESS.getCodeDesc());
                 }
             } catch (DataTypeCastException e) {
                 logger.error("[KeyManagerCallback.onPush]  deserialize the data error.", e);
@@ -107,22 +126,22 @@ public class KeyManagerCallback extends AmopCallback {
         }
         return encryptResponse;
     }
-    
+
     /**
      * 检查是否有权限获取秘钥数据.
+     *
      * @param arg 请求秘钥对应的参数
      * @param keyMap 查询出来的key数据
-     * @return
      */
     private boolean checkAuthority(GetEncryptKeyArgs arg, Map<String, Object> keyMap) {
         if (keyMap == null) {
             logger.info("[checkAuthority] illegal input.");
             return false;
         }
-        List<String> verifiers = (ArrayList<String>)keyMap.get(ParamKeyConstant.KEY_VERIFIERS);
+        List<String> verifiers = (ArrayList<String>) keyMap.get(ParamKeyConstant.KEY_VERIFIERS);
         // 如果verifiers为empty,或者传入的weId为空，或者weId不在指定列表中，则无权限获取秘钥数据
-        if (CollectionUtils.isEmpty(verifiers) 
-            || StringUtils.isBlank(arg.getWeId()) 
+        if (CollectionUtils.isEmpty(verifiers)
+            || StringUtils.isBlank(arg.getWeId())
             || !verifiers.contains(arg.getWeId())) {
             logger.info(
                 "[checkAuthority] no access to get the data, this weid is {}.",

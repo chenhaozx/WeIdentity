@@ -29,12 +29,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
-import com.webank.wedpr.selectivedisclosure.IssuerClient;
-import com.webank.wedpr.selectivedisclosure.IssuerResult;
-import com.webank.wedpr.selectivedisclosure.proto.AttributeTemplate;
-import com.webank.wedpr.selectivedisclosure.proto.AttributeTemplate.Builder;
-import com.webank.wedpr.selectivedisclosure.proto.TemplatePublicKey;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bcos.web3j.crypto.Sign;
@@ -50,6 +44,12 @@ import org.fisco.bcos.web3j.tuples.generated.Tuple7;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
+import com.webank.wedpr.selectivedisclosure.IssuerClient;
+import com.webank.wedpr.selectivedisclosure.IssuerResult;
+import com.webank.wedpr.selectivedisclosure.proto.AttributeTemplate;
+import com.webank.wedpr.selectivedisclosure.proto.AttributeTemplate.Builder;
+import com.webank.wedpr.selectivedisclosure.proto.TemplatePublicKey;
 import com.webank.weid.constant.DataDriverConstant;
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.constant.ParamKeyConstant;
@@ -84,8 +84,14 @@ public class CptServiceEngineV2 extends BaseEngine implements CptServiceEngine {
     private static final String CREDENTIAL_TEMPLATE_EVENT = EventEncoder
         .encode(CptController.CREDENTIALTEMPLATE_EVENT);
     private static CptController cptController;
-    private static Persistence dataDriver = new MysqlDriver();
+    private static Persistence dataDriver;
 
+    private static Persistence getDataDriver() {
+        if (dataDriver == null) {
+            dataDriver = new MysqlDriver();
+        }
+        return dataDriver;
+    }
     static {
 
         if (cptController == null) {
@@ -252,17 +258,17 @@ public class CptServiceEngineV2 extends BaseEngine implements CptServiceEngine {
     private ErrorCode processTemplate(Integer cptId, String cptJsonSchemaNew) {
 
         //if the cpt is not zkp type, no need to make template.
-        if (!CredentialPojoUtils.isZkpCpt(cptId)) {
+        if (!CredentialPojoUtils.isZkpCpt(cptJsonSchemaNew)) {
             return ErrorCode.SUCCESS;
         }
         List<String> attributeList;
         try {
             attributeList = JsonUtil.extractCptProperties(cptJsonSchemaNew);
             IssuerResult issuerResult = IssuerClient.makeCredentialTemplate(attributeList);
-            CredentialTemplateEntity template = issuerResult.credentialTemplateEntity;
+            CredentialTemplateStorage template = issuerResult.credentialTemplateStorage;
             String templateSecretKey = issuerResult.templateSecretKey;
             ResponseData<Integer> resp =
-                dataDriver.saveOrUpdate(
+            		getDataDriver().saveOrUpdate(
                     DataDriverConstant.DOMAIN_ISSUER_TEMPLATE_SECRET,
                     String.valueOf(cptId),
                     templateSecretKey);
@@ -405,7 +411,7 @@ public class CptServiceEngineV2 extends BaseEngine implements CptServiceEngine {
      * java.lang.Integer)
      */
     @Override
-    public ResponseData<CredentialTemplateEntity> queryCredentialTemplate(Integer cptId) {
+    public ResponseData<CredentialTemplateStorage> queryCredentialTemplate(Integer cptId) {
 
         int blockNum = 0;
         try {
@@ -416,13 +422,13 @@ public class CptServiceEngineV2 extends BaseEngine implements CptServiceEngine {
             logger.error(
                 "[queryCredentialTemplate] get block number for cpt : {} failed.",
                 cptId);
-            return new ResponseData<CredentialTemplateEntity>(null, ErrorCode.UNKNOW_ERROR);
+            return new ResponseData<CredentialTemplateStorage>(null, ErrorCode.UNKNOW_ERROR);
         }
         if (blockNum == 0) {
             logger.error(
                 "[queryCredentialTemplate] no credential template found for cpt : {}.",
                 cptId);
-            return new ResponseData<CredentialTemplateEntity>(null, ErrorCode.BASE_ERROR);
+            return new ResponseData<CredentialTemplateStorage>(null, ErrorCode.BASE_ERROR);
         }
         BcosBlock bcosBlock = null;
         try {
@@ -438,14 +444,14 @@ public class CptServiceEngineV2 extends BaseEngine implements CptServiceEngine {
             logger.info(
                 "[queryCredentialTemplate]:get block by number :{} . latestBlock is null",
                 blockNum);
-            return new ResponseData<CredentialTemplateEntity>(null, ErrorCode.BASE_ERROR);
+            return new ResponseData<CredentialTemplateStorage>(null, ErrorCode.BASE_ERROR);
         }
 
         List<Transaction> transList = bcosBlock.getBlock().getTransactions().stream()
             .map(transactionResult -> (Transaction) transactionResult.get())
             .collect(Collectors.toList());
 
-        CredentialTemplateEntity credentialTemplateStorage = new CredentialTemplateEntity();
+        CredentialTemplateStorage credentialTemplateStorage = new CredentialTemplateStorage();
         try {
             for (Transaction transaction : transList) {
                 String transHash = transaction.getHash();
@@ -486,10 +492,10 @@ public class CptServiceEngineV2 extends BaseEngine implements CptServiceEngine {
 
             credentialTemplateStorage.setCredentialSchema(attributes);
         } catch (Exception e) {
-            return new ResponseData<CredentialTemplateEntity>(null, ErrorCode.UNKNOW_ERROR);
+            return new ResponseData<CredentialTemplateStorage>(null, ErrorCode.UNKNOW_ERROR);
         }
 
-        return new ResponseData<CredentialTemplateEntity>(credentialTemplateStorage,
+        return new ResponseData<CredentialTemplateStorage>(credentialTemplateStorage,
             ErrorCode.SUCCESS);
     }
 }

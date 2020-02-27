@@ -22,10 +22,10 @@ package com.webank.weid.protocol.amop;
 
 import java.util.Map;
 
+import com.webank.wedpr.confidentialpayment.proto.TransactionInfo;
 import lombok.Getter;
 import lombok.Setter;
 
-import com.webank.wedpr.assethiding.proto.TransactionInfo;
 import com.webank.weid.protocol.amop.base.AmopBaseMsgArgs;
 
 /**
@@ -51,7 +51,7 @@ public class GetPolicyAndTransferArgs extends AmopBaseMsgArgs {
      * including credit value.
      */
     private TransactionInfo transactionInfo;
-    
+
     /**
      * extra data.
      */

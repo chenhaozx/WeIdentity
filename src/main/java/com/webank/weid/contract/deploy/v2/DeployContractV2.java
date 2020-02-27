@@ -34,6 +34,7 @@ import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.webank.wedpr.example.confidentialpayment.ConfidentialPaymentExample;
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.contract.deploy.DeployContract;
 import com.webank.weid.contract.v2.AuthorityIssuerController;
@@ -118,6 +119,7 @@ public class DeployContractV2 extends DeployContract {
             );
         }
         deployEvidenceContracts();
+        deployHiddenAsset();
     }
 
     private static String deployRoleControllerContracts() {
@@ -162,6 +164,23 @@ public class DeployContractV2 extends DeployContract {
 
     }
 
+    private static String deployHiddenAsset() {
+    	ConfidentialPaymentExample confidentialPaymentExample = null;
+    	 try {
+    		 confidentialPaymentExample = ConfidentialPaymentExample.deploy(
+    		     web3j, 
+    		     credentials, 
+    		     new StaticGasProvider(WeIdConstant.GAS_PRICE, WeIdConstant.GAS_LIMIT)).send();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	 String contractAddress = confidentialPaymentExample.getContractAddress();
+         writeAddressToFile(contractAddress, "hiddenAsset.address");
+         return contractAddress;
+    }
+    
+    
     private static String deployCptContracts(
         String authorityIssuerDataAddress,
         String weIdContractAddress,

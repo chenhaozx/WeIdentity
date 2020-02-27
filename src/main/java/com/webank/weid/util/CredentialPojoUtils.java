@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.webank.weid.service.impl.CredentialPojoServiceImpl.generateSalt;
 
+import com.webank.weid.constant.CptType;
 import com.webank.weid.constant.CredentialConstant;
 import com.webank.weid.constant.CredentialConstant.CredentialProofType;
 import com.webank.weid.constant.CredentialFieldDisclosureValue;
@@ -964,14 +965,17 @@ public final class CredentialPojoUtils {
      * @param cptId the id of the CPT
      * @return true if can be used for zkp, otherwise fales
      */
-    public static boolean isZkpCpt(Integer cptId) {
+    public static boolean isZkpCpt(String cptJson) {
 
         //currently, the system cpt 107, 110 and 111 can not be used for zkp
-        if (cptId == CredentialConstant.CREDENTIALPOJO_EMBEDDED_SIGNATURE_CPT
-            || cptId == CredentialConstant.METADATA_CPT
-            || cptId == CredentialConstant.ZKP_USER_NONCE_CPT) {
-            return false;
+        Map<String, Object> jsonSchemaMap = DataToolUtils
+            .deserialize(cptJson.trim(), HashMap.class);
+        if (jsonSchemaMap.containsKey(CredentialConstant.CPT_TYPE_KEY)) {
+            String cptType = String.valueOf(jsonSchemaMap.get(CredentialConstant.CPT_TYPE_KEY));
+            if (StringUtils.equals(cptType, CptType.ZKP.getName().toString())) {
+                return true;
+            }
         }
-        return true;
+        return false;
     }
 }

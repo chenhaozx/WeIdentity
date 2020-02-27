@@ -19,8 +19,7 @@
 
 package com.webank.weid.service.impl.engine;
 
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
-
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
 import com.webank.weid.protocol.base.Cpt;
 import com.webank.weid.protocol.base.CptBaseInfo;
 import com.webank.weid.protocol.response.ResponseData;
@@ -99,5 +98,5 @@ public interface CptServiceEngine {
      * @param cptId the id of the cpt
      * @return Cpt Credential Template
      */
-    ResponseData<CredentialTemplateEntity> queryCredentialTemplate(Integer cptId);
+    ResponseData<CredentialTemplateStorage> queryCredentialTemplate(Integer cptId);
 }

@@ -19,7 +19,7 @@
 
 package com.webank.weid.rpc;
 
-import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
+import com.webank.wedpr.selectivedisclosure.CredentialTemplateStorage;
 
 import com.webank.weid.protocol.base.Cpt;
 import com.webank.weid.protocol.base.CptBaseInfo;
@@ -100,5 +100,5 @@ public interface CptService {
      * @param cptId the cpt id
      * @return The updated CPT info
      */
-    ResponseData<CredentialTemplateEntity> queryCredentialTemplate(Integer cptId);
+    ResponseData<CredentialTemplateStorage> queryCredentialTemplate(Integer cptId);
 }

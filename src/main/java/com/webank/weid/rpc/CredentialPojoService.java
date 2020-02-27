@@ -21,8 +21,6 @@ package com.webank.weid.rpc;
 
 import java.util.List;
 
-import com.webank.wedpr.assethiding.OwnerResult;
-
 import com.webank.weid.protocol.base.Challenge;
 import com.webank.weid.protocol.base.ClaimPolicy;
 import com.webank.weid.protocol.base.CredentialPojo;
@@ -43,6 +41,12 @@ import com.webank.weid.protocol.response.ResponseData;
  * @author tonychen
  */
 public interface CredentialPojoService {
+
+    //ResponseData<PolicyAndChallenge> getPolicyAndChallenge(
+    //String orgId,
+    //Integer policyId,
+    //String targetUserWeId
+    //);
 
     /**
      * Generate a credential for full claim content.

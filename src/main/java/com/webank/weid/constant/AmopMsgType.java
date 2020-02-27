@@ -22,11 +22,13 @@ import com.webank.weid.protocol.amop.GetEncryptKeyArgs;
 import com.webank.weid.protocol.amop.GetPolicyAndChallengeArgs;
 import com.webank.weid.protocol.amop.GetPolicyAndPreCredentialArgs;
 import com.webank.weid.protocol.amop.IssueCredentialArgs;
+import com.webank.weid.protocol.amop.RequestConsumableCredentialArgs;
 import com.webank.weid.protocol.response.AmopNotifyMsgResult;
 import com.webank.weid.protocol.response.AmopResponse;
 import com.webank.weid.protocol.response.GetEncryptKeyResponse;
 import com.webank.weid.protocol.response.GetPolicyAndChallengeResponse;
 import com.webank.weid.protocol.response.PolicyAndPreCredentialResponse;
+import com.webank.weid.protocol.response.RequestConsumableCredentialResponse;
 import com.webank.weid.protocol.response.RequestIssueCredentialResponse;
 import com.webank.weid.rpc.callback.AmopCallback;
 import com.webank.weid.service.impl.base.AmopCommonArgs;
@@ -67,7 +69,12 @@ public enum AmopMsgType {
     /**
      * 请求issuer签credential.
      */
-    REQUEST_SIGN_CREDENTIAL(6);
+    REQUEST_SIGN_CREDENTIAL(6),
+
+    /**
+     * 请求issuer签 consumable-credential.
+     */
+    GET_CONSUMABLE_CREDENTIAL(7);
 
     private Integer value;
 
@@ -135,6 +142,14 @@ public enum AmopMsgType {
                 IssueCredentialArgs args =
                     DataToolUtils.deserialize(msgBodyStr, IssueCredentialArgs.class);
                 RequestIssueCredentialResponse result = amopCallback.onPush(args);
+                resultBodyStr = DataToolUtils.serialize(result);
+                break;
+            }
+            case GET_CONSUMABLE_CREDENTIAL: {
+                // GET CONSUMABLE CREDENTIAL
+                RequestConsumableCredentialArgs args =
+                    DataToolUtils.deserialize(msgBodyStr, RequestConsumableCredentialArgs.class);
+                RequestConsumableCredentialResponse result = amopCallback.onPush(args);
                 resultBodyStr = DataToolUtils.serialize(result);
                 break;
             }
